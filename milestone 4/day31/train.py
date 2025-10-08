@@ -4,34 +4,31 @@ import pandas as pd
 import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
 
-# Feature engineering
-def create_damage_potential(mag, depth):
-    return 0.6 * mag + 0.2 * (700 - depth) / 700 * 10
+# Load preprocessed data with one-hot encoded columns
+df = pd.read_csv("data/processed_earthquake_data.csv")
 
-def create_risk_category(score):
-    if score < 4.0: return 0
-    if score < 6.0: return 1
-    return 2
-
-# Load data
-df = pd.read_csv("data/preprocessed_earthquake_data.csv")
-
-# Recommended numeric features only
+# Select feature columns (original numeric + one-hot encoded categorical)
 features = [
     "Latitude",
     "Longitude",
     "Depth",
     "Magnitude",
-    "Root Mean Square"
+    "Root Mean Square",
+    "Magnitude Type_MB",
+    "Magnitude Type_MD",
+    "Magnitude Type_MH",
+    "Magnitude Type_ML",
+    "Magnitude Type_MS",
+    "Magnitude Type_MW",
+    "Magnitude Type_MWB",
+    "Magnitude Type_MWC",
+    "Magnitude Type_MWR",
+    "Magnitude Type_MWW",
+    "Status_Automatic",
+    "Status_Reviewed"
 ]
-
-# Drop missing
-df = df.dropna(subset=features).copy()
-
-# Targets
-df["Damage_Potential"] = create_damage_potential(df.Magnitude, df.Depth)
-df["Risk_Category"]    = df["Damage_Potential"].apply(create_risk_category)
 
 # Prepare feature matrix and target vector
 X = df[features]
@@ -53,7 +50,7 @@ model.fit(X_train, y_train)
 
 # Evaluate
 y_pred = model.predict(X_test)
-rmse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 r2   = r2_score(y_test, y_pred)
 print(f"RMSE: {rmse:.3f}, R²: {r2:.3f}")
 
